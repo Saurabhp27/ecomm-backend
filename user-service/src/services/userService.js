@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 
 let users = []; // temporary DB
 
-const SECRET = "mysecret";
+const SECRET = "xyz_secret";
 
 export const register = async ({ email, password }) => {
   const existingUser = users.find(u => u.email === email);
