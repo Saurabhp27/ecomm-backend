@@ -1,2 +1,2 @@
-export const USER_SERVICE_URL = "http://localhost:5002";
-export const ORDER_SERVICE_URL = "http://localhost:5003";
+export const USER_SERVICE_URL = "http://user-service:5002";
+export const ORDER_SERVICE_URL = "http://order-service:5003";
