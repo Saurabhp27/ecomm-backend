@@ -1,19 +1,27 @@
-const orderService = require("../services/orderService");
+const orderService = require('../services/orderService.js');
 
-exports.createOrder = async (req, res) => {
+const createOrder = async (req, res) => {
   try {
-    const data = await orderService.create(req.body);
-    res.json(data);
+    const userId = req.headers['x-user-id']; // from gateway
+    const order = await orderService.createOrder({
+      user_id: userId,
+      ...req.body,
+    });
+    res.status(201).json(order);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error(error);
+    res.status(500).json({ message: 'Error creating order' });
   }
 };
 
-exports.getOrders = async (req, res) => {
+const getOrders = async (req, res) => {
   try {
-    const data = await orderService.getAll();
-    res.json(data);
+    const userId = req.headers['x-user-id'];
+    const orders = await orderService.getOrdersByUser(userId);
+    res.json(orders);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(500).json({ message: 'Error fetching orders' });
   }
 };
+
+module.exports = { createOrder, getOrders };

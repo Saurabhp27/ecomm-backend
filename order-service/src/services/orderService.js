@@ -1,26 +1,25 @@
-let orders = [];
+const pool = require('../config/db.js');
 
-exports.create = async ({ userId, productName, quantity }) => {
-  if (!userId || !productName || !quantity) {
-    throw new Error("Missing fields");
-  }
-
-  const order = {
-    id: Date.now(),
-    userId,
-    productName,
-    quantity,
-    status: "CREATED"
-  };
-
-  orders.push(order);
-
-  return {
-    message: "Order created",
-    order
-  };
+const createOrder = async (orderData) => {
+  const { user_id, product_name, quantity, price } = orderData;
+  const query = `
+    INSERT INTO orders (user_id, product_name, quantity, price)
+    VALUES ($1, $2, $3, $4)
+    RETURNING *;
+  `;
+  const values = [user_id, product_name, quantity, price];
+  const result = await pool.query(query, values);
+  return result.rows[0];
 };
 
-exports.getAll = async () => {
-  return orders;
+const getOrdersByUser = async (userId) => {
+  const query = `
+    SELECT * FROM orders
+    WHERE user_id = $1
+    ORDER BY created_at DESC;
+  `;
+  const result = await pool.query(query, [userId]);
+  return result.rows;
 };
+
+module.exports = { createOrder, getOrdersByUser };

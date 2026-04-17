@@ -6,5 +6,13 @@ export const orderProxy = createProxyMiddleware({
   changeOrigin: true,
   pathRewrite: {
     "^/orders": ""
-  }
+  },
+  on: {
+        proxyReq: (proxyReq, req, res) => {  
+            console.log(req.user, "req.user");
+            if (req.user) {
+                proxyReq.setHeader('x-user-id', String(req.user.id));
+            }
+        }
+    }
 });
