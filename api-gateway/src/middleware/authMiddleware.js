@@ -1,4 +1,4 @@
-import jwt from 'jsonwebtoken';
+ import jwt from 'jsonwebtoken';
 const SECRET = "xyz_secret";
 
 export default (req, res, next) => {

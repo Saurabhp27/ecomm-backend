@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require("express");
 const cors = require("cors");
 
@@ -8,4 +9,5 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/", orderRoutes)
-app.listen("5003", ()=> console.log("order service listening on 5003"));
+const port = process.env.PORT;
+app.listen(port, ()=> console.log(`order service listening on ${port}`));
