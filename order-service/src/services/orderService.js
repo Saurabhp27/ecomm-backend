@@ -1,27 +1,41 @@
+const pool = require('../config/db');
 const { insertOrder, insertOrderItems, findOrdersByUser } = require('../repositories/orderRepository');
 
 const createOrder = async (orderData) => {
   const { user_id, items } = orderData;
 
-  // Business rules
-  if (!user_id) throw new Error('user_id is required');
-  if (!items || items.length === 0) throw new Error('items cannot be empty');
+  const client = await pool.connect();
 
-  for (const item of items) {
-    if (!item.product_name) throw new Error('product_name is required for each item');
-    if (item.quantity <= 0) throw new Error('quantity must be greater than 0');
-    if (item.price <= 0) throw new Error('price must be greater than 0');
+  try{
+
+    if (!user_id) throw new Error('user_id is required');
+    if (!items || items.length === 0) throw new Error('items cannot be empty');
+
+    for (const item of items) {
+      if (!item.product_name) throw new Error('product_name is required for each item');
+      if (item.quantity <= 0) throw new Error('quantity must be greater than 0');
+      if (item.price <= 0) throw new Error('price must be greater than 0');
+    }
+
+    const total_price = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+    await client.query('BEGIN');
+    // Step 1 - create the order
+    const order = await insertOrder(client, user_id, total_price);
+    // Step 2 - insert all items under that order
+    const items_list = await insertOrderItems(client, order.id, items);
+
+    await client.query('COMMIT');
+
+    return { ...order, items: items_list };
   }
-
-  const total_price = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-
-  // Step 1 - create the order
-  const order = await insertOrder(user_id, total_price);
-
-  // Step 2 - insert all items under that order
-  const items_list = await insertOrderItems(order.id, items);
-
-  return { ...order, items: items_list };
+  catch (err){
+    await client.query('ROLLBACK');
+    throw err;
+  }finally{
+    client.release();
+  }
+  
 };
 
 const getOrdersByUser = async (userId) => {

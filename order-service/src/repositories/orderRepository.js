@@ -2,20 +2,20 @@
 
 const pool = require('../config/db.js');
 
-const insertOrder = async (user_id, total_price) => {
-  const result = await pool.query(
+const insertOrder = async (client, user_id, total_price) => {
+  const result = await client.query(
     `INSERT INTO orders (user_id, total_price) VALUES ($1, $2) RETURNING *;`,
     [user_id, total_price]
   );
   return result.rows[0];
 };
 
-const insertOrderItems = async (order_id, items) => {
+const insertOrderItems = async (client, order_id, items) => {
   const insertedItems = [];
 
   for (const item of items) {
     const { product_name, quantity, price } = item;
-    const result = await pool.query(
+    const result = await client.query(
       `INSERT INTO order_items (order_id, product_name, quantity, price)
        VALUES ($1, $2, $3, $4) RETURNING *;`,
       [order_id, product_name, quantity, price]
