@@ -5,6 +5,7 @@ const { insertOrder, insertOrderItems, findOrdersByUser } = require('../reposito
 const createOrder = async (orderData) => {
   const { user_id, items } = orderData;
   const client = await pool.connect();
+  const lockKey = `lock:createOrder:${user_id}`;
 
   try {
     if (!user_id) throw new Error('user_id is required');
@@ -14,6 +15,11 @@ const createOrder = async (orderData) => {
       if (!item.product_name) throw new Error('product_name is required for each item');
       if (item.quantity <= 0) throw new Error('quantity must be greater than 0');
       if (item.price <= 0) throw new Error('price must be greater than 0');
+    }
+
+    const lockAcquired = await redisClient.set(lockKey, 'locked', { NX: true, PX: 5000 });
+    if (!lockAcquired) {
+      throw new Error('Order creation already in progress for this user');
     }
 
     const total_price = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -33,6 +39,8 @@ const createOrder = async (orderData) => {
     throw err;
   } finally {
     client.release();
+
+    await redisClient.del(lockKey);
   }
 };
 
