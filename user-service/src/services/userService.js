@@ -1,8 +1,12 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import fs from "fs";
+import path from "path";
 
 import pool from "../config/db.js";
-const SECRET = "xyz_secret";
+
+const privateKeyPath = path.resolve("src/certs/private.pem");
+const PRIVATE_KEY = fs.readFileSync(privateKeyPath, "utf8");
 
 export const register = async ({ email, password }) => {
   const existingUser = await pool.query(
@@ -44,8 +48,8 @@ export const login = async ({ email, password }) => {
 
   const token = jwt.sign(
     { id: user.id, email: user.email },
-    SECRET,
-    { expiresIn: "1h" }
+    PRIVATE_KEY,
+    { algorithm: "RS256", expiresIn: "1h" }
   );
 
   return { token };

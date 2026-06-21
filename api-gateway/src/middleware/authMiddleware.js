@@ -1,23 +1,21 @@
- import jwt from 'jsonwebtoken';
-const SECRET = "xyz_secret";
+import jwt from 'jsonwebtoken';
+import { getPublicKey } from '../services/publicKeyService.js';
 
-export default (req, res, next) => {
-  const authHeader = req.headers["authorization"];
+export default async (req, res, next) => {
+  const authHeader = req.headers['authorization'];
 
   if (!authHeader) {
-    return res.status(401).json({ message: "No token provided" });
+    return res.status(401).json({ message: 'No token provided' });
   }
 
-  const token = authHeader.split(" ")[1];
+  const token = authHeader.split(' ')[1];
 
   try {
-    const decoded = jwt.verify(token, SECRET);
-
-    // attach user info to request
+    const publicKey = await getPublicKey();
+    const decoded = jwt.verify(token, publicKey, { algorithms: ['RS256'] });
     req.user = decoded;
-
-    next();
+    return next();
   } catch (error) {
-    return res.status(401).json({ message: "Invalid token" });
+    return res.status(401).json({ message: 'Invalid token', error: error.message });
   }
 };
